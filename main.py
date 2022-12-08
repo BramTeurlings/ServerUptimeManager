@@ -12,7 +12,8 @@ import requests
 
 emptyPlayerCountTicks = 0
 serverBedtimeCountTicks = 0
-url = 'http://localhost:30000/modules/user-activity-tracker/UserActivityLog.json'
+url = 'http://localhost:30001/modules/user-activity-tracker/UserActivityLog.json'
+url2 = 'http://localhost:30002/modules/user-activity-tracker/UserActivityLog.json'
 
 
 def is_time_between(begin_time, end_time, check_time=None):
@@ -34,7 +35,7 @@ def shut_down():
 
 startTime = baseTime.time()
 
-print("MCRCON Service initialized. Waiting for player inactivity...")
+print("Server Monitoring Service initialized. Waiting for user inactivity...")
 
 while True:
     # try:
@@ -68,7 +69,22 @@ while True:
         if data:
             for item in data:
                 if item.get('name') != 'world name':
-                    if item.get('status') == 0:
+                    if item.get('status') == '0':
+                        # User is not AFK
+                        allProgramsInactive = 0
+                        emptyPlayerCountTicks = 0
+                        break
+    except:
+        print('Foundry server refused connection! Treating it as offline...')
+    
+    # Todo: This is ugly, make this a method please:
+    try:
+        resp = requests.get(url2)
+        data = resp.json()
+        if data:
+            for item in data:
+                if item.get('name') != 'world name':
+                    if item.get('status') == '0':
                         # User is not AFK
                         allProgramsInactive = 0
                         emptyPlayerCountTicks = 0
@@ -77,7 +93,7 @@ while True:
         print('Foundry server refused connection! Treating it as offline...')
 
     # Only count up the emptyPlayerCountTicks when ALL programs are inactive.
-    if allProgramsInactive:
+    if allProgramsInactive == 1:
         emptyPlayerCountTicks += 1
         print("All servers empty, amount of ticks registered: ", emptyPlayerCountTicks)
 
